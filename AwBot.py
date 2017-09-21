@@ -6,20 +6,31 @@ import telepot
 import tempfile
 from gtts import gTTS
 from datetime import datetime
+import yaml
 
 
 #This script is meant to be used with the runOnReceive parameter of gammu sms daemon
 
-#Get variables
-BOT_TOKEN = os.environ.get("TEST_BOT") # TEST_BOT env variable should contain the bot id
-USER_ID = os.environ.get("TEST_ID") #TEST_ID env variable should contain the user_id
-USER = os.environ.get("TEST_USER")
-PID = os.getpid() # get PID, currently not used
-SMS_NUMBER = os.environ.get("SMS_1_NUMBER")
+#Get variables from file on home/.Awbot.yml
 
+with open("{0}/{1}".format(os.environ.get("HOME"),".AwBot.yml"), "r") as stream:
+    INFO = yaml.load(stream)
+
+BOT_TOKEN = INFO["telegram"]["token"] # TEST_BOT env variable should contain the bot id
+USER_ID = INFO["telegram"]["id"] #TEST_ID env variable should contain the user_id
+USER = INFO["telegram"]["user"]
+PID = os.getpid() # get PID, currently not used
+try:
+    SMS_NUMBER = os.environ.get("SMS_1_NUMBER")
+except:
+    bot = telepot.Bot(BOT_TOKEN) #Create bot
+    bot.sendMessage(USER_ID, "Invocation, but no number on system variables") # send the same text that arrived on the sms
+    sys.exit(0)
+    
 t = datetime.now() #get the time
 
 time_format = "{0}{1}{2}_{3}{4}".format(t.year,t.month,t.day,t.hour,t.minute)
+
 try:
     numparts = int(os.environ['DECODED_PARTS']) # How many parts we got
 except:
