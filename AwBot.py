@@ -31,13 +31,13 @@ class Log(object):
 #Get variables from file on home/.Awbot.yml
 
 
+HOME_PATH="/home/scar" #Change this to your home, since this script will be run from cron env
 
-
-with open("{0}/{1}".format(os.environ.get("HOME"),".AwBot.yml"), "r") as stream:
+with open("{0}/{1}".format(HOME_PATH,".AwBot.yml"), "r") as stream:
     INFO = yaml.load(stream)
 
 #intialize log
-log = Log("{0}/{1}".format(os.environ.get("HOME"),"AwBot.log"))
+log = Log("{0}/{1}".format(HOME_PATH,"AwBot.log"))
 
 log.write(os.environ)
 
