@@ -45,13 +45,13 @@ BOT_TOKEN = INFO["telegram"]["token"] # TEST_BOT env variable should contain the
 USER_ID = INFO["telegram"]["id"] #TEST_ID env variable should contain the user_id
 USER = INFO["telegram"]["user"]
 
-log("Token : {0}".format(BOT_TOKEN))
-log("USER ID : {0}".format(USER_ID))
-log("USER : {0}".format(USER))
+log.write("Token : {0}".format(BOT_TOKEN))
+log.write("USER ID : {0}".format(USER_ID))
+log.write("USER : {0}".format(USER))
 
 try:
     SMS_NUMBER = os.environ.get("SMS_1_NUMBER")
-    log("SMS number : {0}".format(SMS_NUMBER))
+    log.write("SMS number : {0}".format(SMS_NUMBER))
 except:
     bot = telepot.Bot(BOT_TOKEN) #Create bot
     bot.sendMessage(USER_ID, "Invocation, but no number on system variables") # send the same text that arrived on the sms
@@ -75,7 +75,7 @@ else:
 
 # Do something with the text
 full_text="Number {0} have sent text: {1}".format(SMS_NUMBER,text)
-log(full_text)
+log.write(full_text)
 
 bot = telepot.Bot(BOT_TOKEN) #Create bot
 bot.sendMessage(USER_ID, full_text) # send the same text that arrived on the sms
