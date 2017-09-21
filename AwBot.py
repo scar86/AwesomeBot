@@ -20,9 +20,10 @@ SMS_NUMBER = os.environ.get("SMS_1_NUMBER")
 t = datetime.now() #get the time
 
 time_format = "{0}{1}{2}_{3}{4}".format(t.year,t.month,t.day,t.hour,t.minute)
-
-numparts = int(os.environ['DECODED_PARTS']) # How many parts we got
-
+try:
+    numparts = int(os.environ['DECODED_PARTS']) # How many parts we got
+except:
+    numparts = 0
 text = ''
 # Are there any decoded parts?
 if numparts == 0:
