@@ -30,7 +30,8 @@ class Log(object):
 #This script is meant to be used with the runOnReceive parameter of gammu sms daemon
 
 #Get variables from file on home/.Awbot.yml
-
+reload(sys)  
+sys.setdefaultencoding('utf8')
 
 HOME_PATH="/home/scar" #Change this to your home, since this script will be run from cron env
 
