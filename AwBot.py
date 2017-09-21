@@ -7,6 +7,7 @@ import tempfile
 from gtts import gTTS
 from datetime import datetime
 import yaml
+import sys
 
 class Log(object):
     
