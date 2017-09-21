@@ -49,14 +49,16 @@ log.write("Token : {0}".format(BOT_TOKEN))
 log.write("USER ID : {0}".format(USER_ID))
 log.write("USER : {0}".format(USER))
 
-try:
+
+
+if "SMS_1_NUMBER" not in os.environ :
+    log.write("No SMS number in variables")
+    bot = telepot.Bot(BOT_TOKEN) #Create bot
+    bot.sendMessage(USER_ID, "Invocation, but missing variables") # send the same text that arrived on the sms
+    sys.exit(0)
+else:
     SMS_NUMBER = os.environ.get("SMS_1_NUMBER")
     log.write("SMS number : {0}".format(SMS_NUMBER))
-except:
-    bot = telepot.Bot(BOT_TOKEN) #Create bot
-    bot.sendMessage(USER_ID, "Invocation, but no number on system variables") # send the same text that arrived on the sms
-    sys.exit(0)
-    
 
 try:
     numparts = int(os.environ['DECODED_PARTS']) # How many parts we got
@@ -64,6 +66,8 @@ except:
     numparts = 0
 text = ''
 # Are there any decoded parts?
+#do we actually have text ?
+
 if numparts == 0:
     text = os.environ['SMS_1_TEXT']
 # Get all text parts
