@@ -37,8 +37,8 @@ def get_arg(argv):
 
 
 if __name__ == "__main__":
-    INFO = get_info(Tinfo)
     get_arg(sys.argv[1:])
+    INFO = get_info(Tinfo)
     if not Tid:
         Tid = INFO['telegram']['id']
     my_bot=Bot(INFO['telegram']['token'],Tid,INFO['telegram']['user'])
