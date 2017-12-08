@@ -3,10 +3,11 @@ from  scarpkg import logStart, logStop, logMsg, Log, get_info, Bot
 Tid=''
 logPath='/tmp'
 verbose=False
+Tinfo=''
 
 def get_arg(argv):
     try:
-        opts, args = getopt.getopt(argv,"hm:i:l:v",["message=","id=","log=","verbose="])
+        opts, args = getopt.getopt(argv,"hm:i:I:l:v",["message=","id=","log=","verbose=","info="])
     except getopt.GetoptError:
         print 'Tnotify -m "Message" -i "telegram_id"'
         print '-l <logpath> default /tmp '
@@ -27,13 +28,16 @@ def get_arg(argv):
         elif opt in ("-l","--log"):
             global logPath
             logPath = arg
+        elif opt in ("-I","--info"):
+            global Tinfo
+            Tinfo = arg
         elif opt in ("-v","--verbose"):
             global verbose
             verbose = 'yes'
 
 
 if __name__ == "__main__":
-    INFO = get_info("/Users/Scar/.variables.yaml")
+    INFO = get_info(Tinfo)
     get_arg(sys.argv[1:])
     if not Tid:
         Tid = INFO['telegram']['id']
