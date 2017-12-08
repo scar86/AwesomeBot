@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 from  scarpkg import logStart, logStop, logMsg, Log, get_info, Bot
+import sys
+import getopt
 Tid=''
 logPath='/tmp'
 verbose=False
 Tinfo=''
+import __main__
+import os
 
 def get_arg(argv):
     try:
@@ -38,10 +42,14 @@ def get_arg(argv):
 
 if __name__ == "__main__":
     get_arg(sys.argv[1:])
+    log = Log(logPath,verbose)
+    
     INFO = get_info(Tinfo)
     if not Tid:
         Tid = INFO['telegram']['id']
     my_bot=Bot(INFO['telegram']['token'],Tid,INFO['telegram']['user'])
-    my.bot.msg(Tmsg)
-
+    log.msg("Sending message : {0}".format(Tmsg))
+    log.msg("To user {0}".format(INFO['telegram']['user']))
+    my_bot.msg(Tmsg)
+    log.stop()
     
