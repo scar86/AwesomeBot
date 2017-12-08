@@ -24,7 +24,7 @@ def logStart(logpath='/tmp',verbose=False):
     # 8 - Log a messages
     
 
-    my_name = __main__.__file__ # get the caller name
+    my_name = os.path.basename(__main__.__file__) # get the caller name
     my_path = logpath # get the path to where to log 
     my_logfile = "{0}/{1}.log".format(my_path,my_name) #path + script name
     
@@ -86,10 +86,10 @@ class Log(object):
     def __init__(self,path="/tmp",verbose=False):
         self.path = path
         self.verbose = verbose
-        self.name = __main__.__file__
+        self.name = os.path.basename(__main__.__file__)
         self.logfile = "{0}/{1}.log".format(self.path,self.name)
         self.pid = os.getpid()
-        #self.start()
+        self.start()
     
     def start(self):
         """
