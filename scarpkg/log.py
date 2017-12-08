@@ -89,7 +89,7 @@ class Log(object):
         self.name = __main__.__file__
         self.logfile = "{0}/{1}.log".format(self.path,self.name)
         self.pid = os.getpid()
-        self.start()
+        #self.start()
     
     def start(self):
         """

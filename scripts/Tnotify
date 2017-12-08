@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+from  scarpkg import logStart, logStop, logMsg, Log, get_info, Bot
+Tid=''
+logPath='/tmp'
+verbose=False
+
+def get_arg(argv):
+    try:
+        opts, args = getopt.getopt(argv,"hm:i:l:v",["message=","id=","log=","verbose="])
+    except getopt.GetoptError:
+        print 'Tnotify -m "Message" -i "telegram_id"'
+        print '-l <logpath> default /tmp '
+        print '-v "verbose output and write to log"'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print 'Tnotify -m "Message" -i "telegram_id"'
+            print '-l <logpath> default /tmp '
+            print '-v "verbose output and write to log"'
+            sys.exit()
+        elif opt in ("-i", "--id"):
+            global Tid
+            Tid = arg
+        elif opt in ("-m", "--message"):
+            global Tmsg
+            Tmsg = arg
+        elif opt in ("-l","--log"):
+            global logPath
+            logPath = arg
+        elif opt in ("-v","--verbose"):
+            global verbose
+            verbose = 'yes'
+
+
+if __name__ == "__main__":
+    INFO = get_info("/Users/Scar/.variables.yaml")
+    get_arg(sys.argv[1:])
+    if not Tid:
+        Tid = INFO['telegram']['id']
+    my_bot=Bot(INFO['telegram']['token'],Tid,INFO['telegram']['user'])
+    my.bot.msg(Tmsg)
+
+    

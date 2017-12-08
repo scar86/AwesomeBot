@@ -20,5 +20,5 @@ my_bot=Bot(INFO['telegram']['token'],INFO['telegram']['id'],INFO['telegram']['us
 my_bot.msg("Hola mundo")
 #my_bot.photo("/Users/Scar/garfield.jpg")
 #my_bot.audio("/Users/Scar/Fate_of_the_unknown.mp3")
-my_bot.video("/Users/Scar/3x21_viudo negro.mp4")
+#my_bot.video("/Users/Scar/3x21_viudo negro.mp4")
 #log.start()
