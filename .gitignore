@@ -1,2 +1,3 @@
 *.pyc
+scarpkg/log.pyc
 test.py
