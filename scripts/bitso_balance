@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+import bitso # put the package from https://github.com/bitsoex/bitso-py on your python env
+import yaml
+import os
+import sys
+import json
+from pprint import pprint
+
+#get variable info
+
+var_file=os.getenv('HOME')+"/.bitso.yml"
+
+if os.path.isfile(var_file):
+    with open(var_file, "r") as stream:
+        INFO = yaml.load(stream)
+    if not INFO['key'] or not INFO['secret']:
+        print "Create file {0} with the following info".format(var_file)
+        print "key: 'your bitso api key'"
+        print "secret : 'yout bitso api secret'"
+        sys.exit(1)
+else:
+    print "Create file {0} with the following info".format(var_file)
+    print "key: 'your bitso api key'"
+    print "secret : 'your bitso api secret'"
+    sys.exit(1)
+    
+api = bitso.Api(INFO['key'],INFO['secret'])
+
+
+try:
+    balance = api.balances() #using some undermethos of the bitso api
+except:
+    print "Failed to connect to bitso api, verify key and secret are correct"
+    sys.exit(1)
+    
+lst=[]
+for a in balance.currencies:
+    if a == 'currencies' or a == 'mxn':
+        pass
+    elif getattr(balance, a).total:
+        lst.append((a,getattr(balance, a).total))
+        #print "For {0} you have {1}".format(a,getattr(balance, a).total)
+    #if a['total']:
+        #print "For {0} you have {1}".format(a['total'],a['currency'])
+
+total_mx=0.0
+for coin, total in lst:
+    
+    tick = api.ticker("{0}_mxn".format(coin))
+    #print tick.last
+    print "For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last)
+    total_mx += float(total*tick.last)
+
+#print total_mx
+print "\nTotal in MXN : ${0:.2f}".format(total_mx)
+
+    
