@@ -71,10 +71,11 @@ def get_bitso_balance(key=None,secret=None):
         txt.append("Coin {0} currently 1 in mxn ${1:}".format(coin,tick.last))
         
         log.msg("For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last))
-        txt.append(("For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last)))
+        txt.append("For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last))
         total_mx += float(total*tick.last)
     
     log.msg("Total in MXN : ${0:.2f}".format(total_mx))
+    txt.append("Total in MXN : ${0:.2f}".format(total_mx))
     return '\n'.join(txt)
 
 if __name__ == "__main__":
