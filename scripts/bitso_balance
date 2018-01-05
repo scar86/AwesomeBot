@@ -15,7 +15,7 @@ Tsilent=False
 
 def get_arg(argv):
     try:
-        opts, args = getopt.getopt(argv,"hm:s:I:l:v",["message=","silent=","log=","verbose=","info="])
+        opts, args = getopt.getopt(argv,"hm:sI:l:v",["message=","silent=","log=","verbose=","info="])
     except getopt.GetoptError:
         print 'bitso_balance -I <File_to_variables>'
         print '-l <logpath> default /tmp '
