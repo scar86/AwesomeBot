@@ -11,11 +11,11 @@ Tid=''
 logPath='/tmp'
 verbose=False
 Tinfo=''
-
+Tsilent=False
 
 def get_arg(argv):
     try:
-        opts, args = getopt.getopt(argv,"hm:i:I:l:v",["message=","id=","log=","verbose=","info="])
+        opts, args = getopt.getopt(argv,"hm:s:I:l:v",["message=","silent=","log=","verbose=","info="])
     except getopt.GetoptError:
         print 'bitso_balance -I <File_to_variables>'
         print '-l <logpath> default /tmp '
@@ -27,9 +27,9 @@ def get_arg(argv):
             print '-l <logpath> default /tmp '
             print '-v "verbose output and write to log"'
             sys.exit()
-        elif opt in ("-i", "--id"):
-            global Tid
-            Tid = arg
+        elif opt in ("-s", "--silent"):
+            global Tsilent
+            Tsilent = True
         elif opt in ("-m", "--message"):
             global Tmsg
             Tmsg = arg
@@ -86,9 +86,12 @@ if __name__ == "__main__":
     Tmsg=get_bitso_balance(key=INFO['bitso']['key'],secret=INFO['bitso']['secret'])
     if not Tid:
         Tid = INFO['telegram']['id']
-    my_bot=Bot(INFO['telegram']['token'],Tid,INFO['telegram']['user'])
-    log.msg("Sendinf bitso information to user {0}".format(INFO['telegram']['user']))
-    my_bot.msg(Tmsg)
+    if Tsilent:
+        log.msg("Silent mode, not sending Telegram msg")
+    else:
+        my_bot=Bot(INFO['telegram']['token'],Tid,INFO['telegram']['user'])
+        log.msg("Sendinf bitso information to user {0}".format(INFO['telegram']['user']))
+        my_bot.msg(Tmsg)
     log.stop()
     sys.exit(0)
 
