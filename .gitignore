@@ -1,3 +1,4 @@
 *.pyc
 scarpkg/log.pyc
 test.py
+.DS_Store
