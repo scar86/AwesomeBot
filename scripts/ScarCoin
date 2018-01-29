@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+import bitso # put the package from https://github.com/bitsoex/bitso-py on your python env
+import sys
+from pprint import pprint
+from  scarpkg import logStart, logStop, logMsg, Log, get_info, Bot
+import getopt
+import __main__
+import os
+import telegram
+import argparse
+import telegram
+from telegram.ext import CommandHandler, Updater, Filters, MessageHandler
+
+
+def get_my_args():
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v","--verbose", help="Set verbose to True",action="store_true")
+    parser.add_argument("-l","--log", help="Set logpath, default=/tmp",default="/tmp")
+    parser.add_argument("-I","--variables", help="File with variables info default {0}/.variales.yml".format(os.environ['HOME']),default=os.environ['HOME']+"/.variables.yaml") 
+    args = parser.parse_args()
+    
+    return args
+    
+
+
+
+def get_bitso_balance(key=None,secret=None):
+    api = bitso.Api(key,secret)
+    try:
+        balance = api.balances() #using some undermethos of the bitso api
+    except:
+        log.msg("Failed to connect to bitso api, verify key and secret are correct")
+        sys.exit(1)
+        #return "Failed to connect to bitso api, verify key and secret are correct"
+        #sys.exit(1)
+    lst=[]
+    txt=[]
+    for a in balance.currencies:
+        if a == 'currencies' or a == 'mxn':
+            pass
+        elif getattr(balance, a).total:
+            lst.append((a,getattr(balance, a).total))
+            #print "For {0} you have {1}".format(a,getattr(balance, a).total)
+        #if a['total']:
+            #print "For {0} you have {1}".format(a['total'],a['currency'])
+    
+    total_mx=0.0
+    for coin, total in lst:
+        tick = api.ticker("{0}_mxn".format(coin))
+        log.msg("Coin {0} currently 1 in mxn ${1:}".format(coin,tick.last))
+        txt.append("Coin {0} currently 1 in mxn ${1:}".format(coin,tick.last))
+        
+        log.msg("For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last))
+        txt.append("For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last))
+        total_mx += float(total*tick.last)
+    
+    if balance.mxn.total > 0:
+        log.msg("You have {0:.2f} MXN on your wallet ready to buy coins".format(balance.mxn.total))
+        txt.append("You have {0:.2f} MXN on your wallet ready to buy coins".format(balance.mxn.total))
+    total_mx += float(balance.mxn.total)
+    log.msg("Total in MXN : ${0:.2f}".format(total_mx))
+    txt.append("Total in MXN : ${0:.2f}".format(total_mx))
+    return '\n'.join(txt)
+
+
+def status(bot, update):
+    if str(update.message.chat_id) == telegram_id:
+        msg = get_bitso_balance(bitso_key,bitso_secret)
+        bot.send_message(chat_id=update.message.chat_id, text=msg)
+    else:
+        bot.send_message(chat_id=update.message.chat_id, text="Hi I'm a bot")
+        log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
+                                                                        update.message.chat_id, update.message.from_user.username))
+         
+def echo(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
+    log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
+                                                                        update.message.chat_id, update.message.from_user.username))
+
+def unknown(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text="Sorry, I didn't understand that command.")
+
+if __name__ == "__main__":
+    args = get_my_args()
+    #print args
+    log = Log(args.log,args.verbose)
+    INFO = get_info(args.variables)
+    bitso_key=INFO['bitso']['key']
+    bitso_secret=secret=INFO['bitso']['secret']
+    telegram_id=INFO['ScarCoin']['id']
+    telegram_bot=INFO['ScarCoin']['token']
+    
+    #Create bot
+    
+    updater = Updater(token=telegram_bot)
+    dispatcher = updater.dispatcher
+    #status handler
+    status_handler = CommandHandler('status', status)
+    dispatcher.add_handler(status_handler)
+    #echo handler
+    echo_handler = MessageHandler(Filters.text, echo)
+    dispatcher.add_handler(echo_handler)
+    
+    #Unkown handler
+    unknown_handler = MessageHandler(Filters.command, unknown)
+    dispatcher.add_handler(unknown_handler)
+    # start bot
+    updater.start_polling()
+    #updater.idle()
