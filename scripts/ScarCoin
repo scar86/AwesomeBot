@@ -17,7 +17,7 @@ def get_my_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose", help="Set verbose to True",action="store_true")
     parser.add_argument("-l","--log", help="Set logpath, default=/tmp",default="/tmp")
-    parser.add_argument("-I","--variables", help="File with variables info default {0}/.variales.yml".format(os.environ['HOME']),default=os.environ['HOME']+"/.variables.yaml") 
+    parser.add_argument("-I","--variables", help="File with variables info default {0}/.variales.yaml".format(os.environ['HOME']),default=os.environ['HOME']+"/.variables.yaml") 
     args = parser.parse_args()
     
     return args
@@ -31,7 +31,7 @@ def get_bitso_balance(key=None,secret=None):
         balance = api.balances() #using some undermethos of the bitso api
     except:
         log.msg("Failed to connect to bitso api, verify key and secret are correct")
-        sys.exit(1)
+        return 1
         #return "Failed to connect to bitso api, verify key and secret are correct"
         #sys.exit(1)
     lst=[]
@@ -63,7 +63,38 @@ def get_bitso_balance(key=None,secret=None):
     txt.append("Total in MXN : ${0:.2f}".format(total_mx))
     return '\n'.join(txt)
 
-
+def get_orders(key=None,secret=None):
+    api = bitso.Api(key,secret)
+    log.msg("Getting open orders")
+    try:
+        books = api.available_books()
+    except:
+        log.msg("Failed to connect to bitso api to get books info, verify key and secret are correct")
+        return 1
+    r_lst=[]
+    for book in books.__dict__.keys():
+        if book == 'books':
+            continue
+        try:
+            oo = api.open_orders(book) #using some undermethos of the bitso api
+        except:
+            log.msg("Failed to connect to book {0}".format)
+            return 1
+        if oo:
+            txt = ["Book : {0}".format(book)]
+            for order in oo:
+                txt.append("\nOrder id : {0}".format(order.oid))
+                txt.append("Order side : {0}".format(order.side))
+                txt.append("Order type : {0}".format(order.type))
+                txt.append("At Coin price : {0}".format(order.price))
+                txt.append("Coin amount : {0}".format(order.original_amount))
+                txt.append("Value in MXN : {0}".format(order.original_value))
+                #txt.append("-"*20)
+            r_lst.append("\n".join(txt))
+        
+    return r_lst
+            
+    
 def status(bot, update):
     if str(update.message.chat_id) == telegram_id:
         msg = get_bitso_balance(bitso_key,bitso_secret)
@@ -72,14 +103,33 @@ def status(bot, update):
         bot.send_message(chat_id=update.message.chat_id, text="Hi I'm a bot")
         log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
                                                                         update.message.chat_id, update.message.from_user.username))
-         
+        log.msg("Command : status")
+        
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
     log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
                                                                         update.message.chat_id, update.message.from_user.username))
+    log.msg("MSG : {0}".format(update.message.text))
 
 def unknown(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="Sorry, I didn't understand that command.")
+    
+def orders(bot, update):
+    if str(update.message.chat_id) == telegram_id:
+        msg = get_orders(bitso_key,bitso_secret)
+        for a in msg:
+            bot.send_message(chat_id=update.message.chat_id, text=a)
+    else:
+        bot.send_message(chat_id=update.message.chat_id, text="Hi I'm a bot")
+        log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
+                                                                        update.message.chat_id, update.message.from_user.username))
+        log.msg("Command : orders")
+        
+def price(bot, update):
+    pass
+
+def cmd(bot, update, args):
+    pass
 
 if __name__ == "__main__":
     args = get_my_args()
@@ -98,6 +148,21 @@ if __name__ == "__main__":
     #status handler
     status_handler = CommandHandler('status', status)
     dispatcher.add_handler(status_handler)
+    
+    #orders handler
+    orders_handler = CommandHandler('orders', orders)
+    dispatcher.add_handler(orders_handler)
+    
+    #price list
+    
+    price_handler = CommandHandler('price', price)
+    dispatcher.add_handler(price_handler)
+    
+    #cmd handler
+    
+    cmd_handler = CommandHandler('cmd', cmd, pass_args=True)
+    dispatcher.add_handler(cmd_handler)
+    
     #echo handler
     echo_handler = MessageHandler(Filters.text, echo)
     dispatcher.add_handler(echo_handler)
@@ -107,4 +172,4 @@ if __name__ == "__main__":
     dispatcher.add_handler(unknown_handler)
     # start bot
     updater.start_polling()
-    #updater.idle()
+    updater.idle()
