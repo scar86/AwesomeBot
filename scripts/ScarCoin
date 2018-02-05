@@ -161,7 +161,8 @@ def op_order(bot, update):
 def startorder(bot, update): # this start the conversation
     log.msg("Function : startorder")
     reply_keyboard = [['eth_mxn', 'xrp_mxn', 'btc_mxn']]
-
+    global cmd
+    cmd = []
     update.message.reply_text(
         'Hi! For what book will be the operaion ?. '
         'Send /cancel anytime to cancel the operation.\n\n',
