@@ -8,9 +8,21 @@ import __main__
 import os
 import telegram
 import argparse
-import telegram
-from telegram.ext import CommandHandler, Updater, Filters, MessageHandler
+from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
+                          ConversationHandler)
+import logging
 
+
+#Steps to converstations
+STATUS, CANCEL, CONFIRMCANCEL =  range(3)
+OPERATION, SETPRICE, MXN, CONFIRMATION, SETORDER = range(5)
+
+
+#logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#                    level=logging.INFO)
+
+#logger = logging.getLogger(__name__)
 
 def get_my_args():
     
@@ -26,14 +38,13 @@ def get_my_args():
 
 
 def get_bitso_balance(key=None,secret=None):
+    log.msg("Function: get_bitso_balance")
     api = bitso.Api(key,secret)
     try:
         balance = api.balances() #using some undermethos of the bitso api
     except:
         log.msg("Failed to connect to bitso api, verify key and secret are correct")
         return 1
-        #return "Failed to connect to bitso api, verify key and secret are correct"
-        #sys.exit(1)
     lst=[]
     txt=[]
     for a in balance.currencies:
@@ -41,9 +52,6 @@ def get_bitso_balance(key=None,secret=None):
             pass
         elif getattr(balance, a).total:
             lst.append((a,getattr(balance, a).total))
-            #print "For {0} you have {1}".format(a,getattr(balance, a).total)
-        #if a['total']:
-            #print "For {0} you have {1}".format(a['total'],a['currency'])
     
     total_mx=0.0
     for coin, total in lst:
@@ -91,85 +99,294 @@ def get_orders(key=None,secret=None):
                 txt.append("Value in MXN : {0}".format(order.original_value))
                 #txt.append("-"*20)
             r_lst.append("\n".join(txt))
-        
+            log.msg("\n".join(txt))
+    
     return r_lst
             
     
 def status(bot, update):
+    log.msg("Command : status")
     if str(update.message.chat_id) == telegram_id:
         msg = get_bitso_balance(bitso_key,bitso_secret)
         bot.send_message(chat_id=update.message.chat_id, text=msg)
+        log.msg("Status sent")
     else:
         bot.send_message(chat_id=update.message.chat_id, text="Hi I'm a bot")
         log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
                                                                         update.message.chat_id, update.message.from_user.username))
-        log.msg("Command : status")
         
 def echo(bot, update):
+    log.msg("Function: echo ")
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
     log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
                                                                         update.message.chat_id, update.message.from_user.username))
     log.msg("MSG : {0}".format(update.message.text))
 
 def unknown(bot, update):
+    log.msg("Function: unknown")
     bot.send_message(chat_id=update.message.chat_id, text="Sorry, I didn't understand that command.")
+    log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
+                                                                        update.message.chat_id, update.message.from_user.username))
     
+def price(bot, update):
+    log.msg("Function : price")
+    bot.send_message(chat_id=update.message.chat_id, text="To be implemented")
+    log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
+                                                                        update.message.chat_id, update.message.from_user.username))
+                                                                        
 def orders(bot, update):
+    log.msg("Function : orders")
     if str(update.message.chat_id) == telegram_id:
         msg = get_orders(bitso_key,bitso_secret)
         for a in msg:
-            bot.send_message(chat_id=update.message.chat_id, text=a)
+            bot.send_message(chat_id=update.message.chat_id, text=a,reply_markup=ReplyKeyboardRemove())
     else:
         bot.send_message(chat_id=update.message.chat_id, text="Hi I'm a bot")
         log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
                                                                         update.message.chat_id, update.message.from_user.username))
         log.msg("Command : orders")
         
-def price(bot, update):
-    pass
+    return ConversationHandler.END
+        
+def op_order(bot, update):
+    log.msg("Function : op_order")
+    reply_keyboard = [['Status', 'Cancel']]
+    update.message.reply_text(
+        'Hi! Please select the order operation ?. '
+        'Send /cancel anytime to cancel the operation.\n\n',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-def cmd(bot, update, args):
-    pass
+    return STATUS
 
+def startorder(bot, update): # this start the conversation
+    log.msg("Function : startorder")
+    reply_keyboard = [['eth_mxn', 'xrp_mxn', 'btc_mxn']]
+
+    update.message.reply_text(
+        'Hi! For what book will be the operaion ?. '
+        'Send /cancel anytime to cancel the operation.\n\n',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return OPERATION # start chain the function on the conversation , OPERATION step, operation function
+
+def operation(bot, update):
+    log.msg("Function : operation")
+    reply_keyboard = [['Buy','Sell']]
+    user = update.message.from_user
+    global cmd
+    cmd.append(update.message.text)
+    update.message.reply_text('What operation will be for book {0}'.format(update.message.text),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return SETPRICE # chain steps, see conversation handler
+
+
+def set_price(bot, update):
+    log.msg("Function : set_price")
+    user = update.message.from_user
+    global cmd
+    cmd.append(update.message.text)
+    update.message.reply_text('At what price the operation will be ?', 
+        reply_markup=ReplyKeyboardRemove())
+
+    return MXN
+
+
+def mxn(bot, update):
+    log.msg("Function : mxn")
+    user = update.message.from_user
+    global cmd
+    cmd.append(update.message.text)
+    update.message.reply_text('Set the MXN amount to sell or buy')
+
+    return CONFIRMATION
+
+
+def confirmation(bot, update):
+    log.msg("Function : confirmation")
+    reply_keyboard = [['Yes', 'No']]
+    user = update.message.from_user
+    global cmd
+    cmd.append(update.message.text)
+    update.message.reply_text('Are you sure to put the following order ?',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return SETORDER
+
+
+def set_order(bot, update):
+    log.msg("Function : set_order")
+    user = update.message.from_user
+    log.msg("ARGS: {0}".format(cmd))
+    result = put_order(cmd)
+    if result:
+        update.message.reply_text('Order succesully put'
+                                  'OID : {0}'.format(result['oid']),
+                                  reply_markup=ReplyKeyboardRemove())
+    else:
+        update.message.reply_text('ERROR Setting order',reply_markup=ReplyKeyboardRemove() )
+
+    return ConversationHandler.END
+
+
+def cancel(bot, update):
+    log.msg("Function : cancel")
+    user = update.message.from_user
+    log.msg("User {0} canceled the conversation.".format(user.first_name))
+    update.message.reply_text('Operation canceled ',
+                              reply_markup=ReplyKeyboardRemove())
+    
+
+    return ConversationHandler.END
+    
+def put_order(args):
+    log.msg("Function : put_order")
+    api = bitso.Api(bitso_key,bitso_secret)
+    book, op, price, mxn = args
+    op = op.lower()
+    major = "{0:.7}".format(1*float(mxn)/float(price))
+    log.msg("Book {0}, op {1}, price {2}, major {3}, mxn {4}".format(book,op,price,major,mxn))
+    try:
+        order = api.place_order(book=book, side=op, order_type='limit', major=major, price=price)
+    except ApiError as e:
+        log.msg("ERROR setting the order {0}".format(e))
+        order =  {'oid' : 'ERROR setting order'}
+    
+    return order
+
+def error(bot, update, error):
+    """Log Errors caused by Updates."""
+    log.msg("Function : error")
+    log.msg('Update {0} caused error {1}'.format(update, error))
+    
+def cancel_order(bot, update):
+    log.msg("Cancel order function")
+    update.message.reply_text('Please type the order id to cancel',
+                              reply_markup=ReplyKeyboardRemove())
+    return CANCEL
+    
+def confirm_cancel_order(bot, update):
+    log.msg("Function : confirm_cancel_order")
+    reply_keyboard = [['Yes','No']]
+    log.msg("Cancel ask order function")
+    api = bitso.Api(bitso_key,bitso_secret)
+    orderid = update.message.text
+    try:
+        order = api.lookup_order(orderid)
+    except ApiError:
+        update.message.reply_text('Order not found, please verify',
+                              reply_markup=ReplyKeyboardRemove())
+        return ConversationHandler.END
+    
+    global oid
+    oid = orderid
+    
+    update.message.reply_text('Are you sure to cancel the following order ? :'
+                            '\nBook: {0} \nSide: {1} \nAmount coin : {2} \nCoin price: {3} \nIn MXN: {4}'.format(order[0].book,
+                             order[0].side, order[0].original_amount, order[0].price,order[0].original_value),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    
+    return CONFIRMCANCEL
+
+def remove_order(bot, update):
+    log.msg("Function : remove_order")
+    api = bitso.Api(bitso_key,bitso_secret)
+    global oid
+    log.msg('Will cancel orderid: {0}'.format(oid))
+    try:
+        corder = api.cancel_order(oid)
+    except ApiError:
+        update.message.reply_text('Problem Canceling order',
+                              reply_markup=ReplyKeyboardRemove())
+        return ConversationHandler.END
+    
+    print corder
+    if corder:
+        update.message.reply_text('Order canceled successfully',
+                              reply_markup=ReplyKeyboardRemove())
+    else:
+        update.message.reply_text('Bitso Api dont provide feedback \nPlease verify the order was canceled using \n/order then status',
+                              reply_markup=ReplyKeyboardRemove())
+    
+    return ConversationHandler.END
+    
 if __name__ == "__main__":
     args = get_my_args()
-    #print args
     log = Log(args.log,args.verbose)
     INFO = get_info(args.variables)
     bitso_key=INFO['bitso']['key']
-    bitso_secret=secret=INFO['bitso']['secret']
+    bitso_secret=INFO['bitso']['secret']
     telegram_id=INFO['ScarCoin']['id']
     telegram_bot=INFO['ScarCoin']['token']
+    my_user=INFO['ScarCoin']['user']
     
     #Create bot
-    
+    cmd=[]
+    oid=''
     updater = Updater(token=telegram_bot)
     dispatcher = updater.dispatcher
+    
     #status handler
-    status_handler = CommandHandler('status', status)
+    status_handler = CommandHandler('status', status,filters=Filters.chat(username=my_user))
     dispatcher.add_handler(status_handler)
     
-    #orders handler
-    orders_handler = CommandHandler('orders', orders)
-    dispatcher.add_handler(orders_handler)
+    ##price list
     
-    #price list
-    
-    price_handler = CommandHandler('price', price)
+    price_handler = CommandHandler('price', price, filters=Filters.chat(username=my_user))
     dispatcher.add_handler(price_handler)
     
-    #cmd handler
     
-    cmd_handler = CommandHandler('cmd', cmd, pass_args=True)
-    dispatcher.add_handler(cmd_handler)
+    conv_order= ConversationHandler( # Structure of the conversation
+        entry_points=[CommandHandler('orders', op_order, filters=Filters.chat(username=my_user))], # Start conversation, this call step 1
+
+        states={
+            STATUS: [RegexHandler('^Status$', orders),RegexHandler('^Cancel$', cancel_order)], # step 1,
+
+            CANCEL: [MessageHandler(Filters.text, confirm_cancel_order)], # step 2
+            
+            CONFIRMCANCEL: [RegexHandler('^Yes$', remove_order), # step 3
+                        RegexHandler('^No$', cancel)]
+
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)] # cancel conversation at any time
+    )
+    
+    dispatcher.add_handler(conv_order) # add conversationHandler to dispatcher
+    
+   #Conversation handler 
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('setorder', startorder, filters=Filters.chat(username=my_user))], # start point, this call to OPERATION
+
+        states={
+            OPERATION: [RegexHandler('^(eth_mxn|xrp_mxn|btc_mxn)$', operation)], # This call to SETPRICE
+
+            SETPRICE: [RegexHandler('^(Buy|Sell)$', set_price)], # This call MXN
+            
+            MXN: [MessageHandler(Filters.text, mxn)], # This call CONFIRMATION
+
+            CONFIRMATION: [MessageHandler(Filters.text, confirmation)], # This call SETORDER
+            
+            SETORDER: [RegexHandler('^Yes$', set_order),
+                        RegexHandler('^No$', cancel)]
+            
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)] # Cancel at any time
+    )
+    
+    dispatcher.add_handler(conv_handler) # add handler
     
     #echo handler
-    echo_handler = MessageHandler(Filters.text, echo)
+    echo_handler = MessageHandler(Filters.text, echo) # echo messages for all users
     dispatcher.add_handler(echo_handler)
     
+    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
+    
     #Unkown handler
-    unknown_handler = MessageHandler(Filters.command, unknown)
+    unknown_handler = MessageHandler(Filters.command, unknown) # for unknown commands
     dispatcher.add_handler(unknown_handler)
     # start bot
-    updater.start_polling()
-    updater.idle()
+    dispatcher.add_error_handler(error) # log errors
+    updater.start_polling() # start bot
+    updater.idle() # allow kill bot
