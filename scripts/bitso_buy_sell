@@ -1,0 +1,133 @@
+#!/usr/bin/env python
+import bitso # put the package from https://github.com/bitsoex/bitso-py on your python env
+import sys
+from pprint import pprint, pformat
+from  scarpkg import logStart, logStop, logMsg, Log, get_info, Bot, save_info
+import getopt
+import __main__
+import os
+from scarpkg.bitso_functions import create_api, get_bitso_balance, get_orders, put_order, get_ticker
+import argparse
+
+bitso_file = os.environ['HOME']+"/.order.yaml"
+verbose=False
+mxn_amount=220.0
+mxn_diff=100.0
+
+def get_my_args():
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v","--verbose", help="Set verbose to True",action="store_true")
+    parser.add_argument("-l","--log", help="Set logpath, default=/tmp",default="/tmp")
+    parser.add_argument("-I","--variables", help="File with variables info default {0}/.variales.yaml".format(os.environ['HOME']),default=os.environ['HOME']+"/.variables.yaml") 
+    args = parser.parse_args()
+    
+    return args
+
+def create_order(book=None,side=None,last=None):
+    try :
+        ticker = get_ticker(book)
+        log(ticker)
+    except:
+        log("ERROR Getting info for book {0}".format(book))
+        my_bot.msg("Error creating new order")
+        logStop(1)
+        sys.exit(1)
+    diff = ticker.high - ticker.low
+    if diff < mxn_diff:
+        log("Difference betwen high and low is less than {1} mxn on book {0}".format(book,mxn_diff))
+        my_bot.msg("Difference betwen high and low is less than {1} mxn on book {0} \nPut order manually or wait for a new one".format(book,mxn_diff))
+        #my_bot.msg("Put new order manually ")
+        
+    step = diff/10
+    log("The difference between high and low is {0}".format(diff))
+    log("The steps will be of {0}".format(step))
+    
+    if side == 'sell':
+        price = ticker.low + step # 1600
+        #last buy 1800
+        if price < last:
+            log("ERROR last buy operation was at {0}, this sell operation would be at {1}".format(last,price))
+            my_bot.msg("ERROR last buy operation was at {0}, this sell operation would be at {1} \nPut an order manually".format(last,price))
+            logStop(1)
+            sys.exit(1)
+    elif side == 'buy': 
+        price = ticker.high - step #1700
+        # last sell : 1600
+        if price > last: 
+            log("ERROR last sell operation was at {0}, this buy operation would be at {1}".format(last,price))
+            my_bot.msg("ERROR last sell operation was at {0}, this buy operation would be at {1} \nPut an order manually".format(last,price))
+            logStop(1)
+            sys.exit(1) 
+    
+    cmd=[book, side, price, mxn_amount]
+    
+    try:
+        new_order =  put_order(cmd)
+    except:
+        log("ERROR putting new order {0}".format(cmd))
+        my_bot.msg("ERROR putting new order {0}".format(cmd))
+        
+        
+def main():
+    INFO = get_info(args.variables)
+    o_id = order.oid
+    o_status  = order.status
+    o_side = order.side
+    o_amount = order.original_amount
+    o_mxn = order.original_value
+    o_book = order.book
+    
+    logMsg("Book {0}".format(o_book))
+    #logMsg("o_id {0}".format(o_id))
+    logMsg("Status {0}".format(o_status))
+    #logMsg("o_side {0}".format(o_side))
+    #logMsg("o_amount {0}".format(o_amount))
+    #logMsg("o_mxn {0}".format(o_mxn))
+    
+    if o_status == 'open':
+        logMsg("order {0} is still open".format(o_id))
+        logStop()
+        sys.exit(0)
+    elif o_status == 'cancelled' or o_status == 'completed':
+        logMsg("Order {0} was cancelled".format(o_id))
+        log("Creating a new order")
+        my_bot.msg("Order {0} was completed or cancelled, creating a new one".format(o_id))
+        if o_side == 'buy':
+            create_order(o_book,'sell',o_mxn)
+        else:
+            create_order(o_book,'buy',o_mxn)
+        
+    #update the dict
+    ORDER['order']['side'] = side
+    ORDER['order']['id'] = new_order['oid']
+    save_info(bitso_file,ORDER)
+    logStop(0)
+    sys.exit()
+        
+    
+if __name__ == "__main__":
+    args = get_my_args()
+    verbose=False
+    log=logMsg
+    if args.verbose:
+        #global verbose
+        verbose = True
+    logStart(args.log,args.verbose)
+    INFO = get_info(args.variables)
+    
+    bitso_key=INFO['bitso']['key']
+    bitso_secret=INFO['bitso']['secret']
+    telegram_id=INFO['ScarCoin']['id']
+    telegram_bot=INFO['ScarCoin']['token']
+    my_user=INFO['ScarCoin']['user']
+    ORDER = get_info(bitso_file)
+    log("Order from disk "+pformat(ORDER))
+    api = create_api()
+    order = api.lookup_order(ORDER['order']['id'])
+    order = order[0]
+    logMsg(pformat(order))
+    my_bot=Bot(INFO['ScarCoin']['token'],INFO['ScarCoin']['id'],INFO['ScarCoin']['user'])
+    main()
+    
+    

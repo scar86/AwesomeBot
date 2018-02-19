@@ -22,9 +22,11 @@ def logStart(logpath='/tmp',verbose=False):
     # 6 - Add formatter to  the handler
     # 7 - Add handler to  thelogger
     # 8 - Log a messages
-    
-
-    my_name = os.path.basename(__main__.__file__) # get the caller name
+    try:
+        my_name = os.path.basename(__main__.__file__) # get the caller name
+    except:
+        my_name = 'live_script'
+        
     my_path = logpath # get the path to where to log 
     my_logfile = "{0}/{1}.log".format(my_path,my_name) #path + script name
     
@@ -74,7 +76,10 @@ def logMsg(msg='',screen=False):
     
     """
     
-    my_name = __main__.__file__ # get caller file name
+    try:
+        my_name = os.path.basename(__main__.__file__) # get the caller name
+    except:
+        my_name = 'live_script'
     #my_path = logpath # get the path of the main script
     
     logger = logging.getLogger(my_name) # get logger with script name

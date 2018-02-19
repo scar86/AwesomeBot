@@ -17,7 +17,7 @@ def create_api(key=None,secret=None,get='bitso'):
     
 def get_bitso_balance(key=None,secret=None):
     logMsg("Function: get_bitso_balance")
-    api = bitso.Api(key,secret)
+    api = bitso.Api()
     try:
         balance = api.balances() #using some undermethos of the bitso api
     except:
@@ -50,7 +50,7 @@ def get_bitso_balance(key=None,secret=None):
     return '\n'.join(txt)
 
 def get_orders(key=None,secret=None):
-    api = bitso.Api(key,secret)
+    api = bitso.Api()
     logMsg("Getting open orders")
     try:
         books = api.available_books()
@@ -83,7 +83,7 @@ def get_orders(key=None,secret=None):
     
 def put_order(args):
     logMsg("Function : put_order")
-    api = bitso.Api(bitso_key,bitso_secret)
+    api = create_api()
     book, op, price, mxn = args
     op = op.lower()
     major = "{0:.7}".format(1*float(mxn)/float(price))
@@ -95,3 +95,10 @@ def put_order(args):
         order =  {'oid' : 'ERROR setting order'}
     
     return order
+
+def get_ticker(book='eth_mxn'):
+    logMsg("Function : put_order")
+    api = create_api()
+    info = api.ticker(book)
+    
+    return info
