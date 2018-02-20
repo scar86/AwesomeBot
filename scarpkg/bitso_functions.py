@@ -17,7 +17,7 @@ def create_api(key=None,secret=None,get='bitso'):
     
 def get_bitso_balance(key=None,secret=None):
     logMsg("Function: get_bitso_balance")
-    api = bitso.Api()
+    api = create_api()
     try:
         balance = api.balances() #using some undermethos of the bitso api
     except:
@@ -50,7 +50,7 @@ def get_bitso_balance(key=None,secret=None):
     return '\n'.join(txt)
 
 def get_orders(key=None,secret=None):
-    api = bitso.Api()
+    api = create_api()
     logMsg("Getting open orders")
     try:
         books = api.available_books()
