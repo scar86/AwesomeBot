@@ -13,6 +13,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
                           ConversationHandler)
 import logging
 
+from bitso_functions import create_api, get_bitso_balance, get_orders, put_order
 
 #Steps to converstations
 STATUS, CANCEL, CONFIRMCANCEL =  range(3)
@@ -35,74 +36,6 @@ def get_my_args():
     return args
     
 
-
-
-def get_bitso_balance(key=None,secret=None):
-    log.msg("Function: get_bitso_balance")
-    api = bitso.Api(key,secret)
-    try:
-        balance = api.balances() #using some undermethos of the bitso api
-    except:
-        log.msg("Failed to connect to bitso api, verify key and secret are correct")
-        return 1
-    lst=[]
-    txt=[]
-    for a in balance.currencies:
-        if a == 'currencies' or a == 'mxn':
-            pass
-        elif getattr(balance, a).total:
-            lst.append((a,getattr(balance, a).total))
-    
-    total_mx=0.0
-    for coin, total in lst:
-        tick = api.ticker("{0}_mxn".format(coin))
-        log.msg("Coin {0} currently 1 in mxn ${1:}".format(coin,tick.last))
-        txt.append("Coin {0} currently 1 in mxn ${1:}".format(coin,tick.last))
-        
-        log.msg("For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last))
-        txt.append("For {0} you have {1:>12} in mxn ${2:.2f}".format(coin,total,total*tick.last))
-        total_mx += float(total*tick.last)
-    
-    if balance.mxn.total > 0:
-        log.msg("You have {0:.2f} MXN on your wallet ready to buy coins".format(balance.mxn.total))
-        txt.append("You have {0:.2f} MXN on your wallet ready to buy coins".format(balance.mxn.total))
-    total_mx += float(balance.mxn.total)
-    log.msg("Total in MXN : ${0:.2f}".format(total_mx))
-    txt.append("Total in MXN : ${0:.2f}".format(total_mx))
-    return '\n'.join(txt)
-
-def get_orders(key=None,secret=None):
-    api = bitso.Api(key,secret)
-    log.msg("Getting open orders")
-    try:
-        books = api.available_books()
-    except:
-        log.msg("Failed to connect to bitso api to get books info, verify key and secret are correct")
-        return 1
-    r_lst=[]
-    for book in books.__dict__.keys():
-        if book == 'books':
-            continue
-        try:
-            oo = api.open_orders(book) #using some undermethos of the bitso api
-        except:
-            log.msg("Failed to connect to book {0}".format)
-            return 1
-        if oo:
-            txt = ["Book : {0}".format(book)]
-            for order in oo:
-                txt.append("\nOrder id : {0}".format(order.oid))
-                txt.append("Order side : {0}".format(order.side))
-                txt.append("Order type : {0}".format(order.type))
-                txt.append("At Coin price : {0}".format(order.price))
-                txt.append("Coin amount : {0}".format(order.original_amount))
-                txt.append("Value in MXN : {0}".format(order.original_value))
-                #txt.append("-"*20)
-            r_lst.append("\n".join(txt))
-            log.msg("\n".join(txt))
-    
-    return r_lst
-            
     
 def status(bot, update):
     log.msg("Command : status")
@@ -240,20 +173,6 @@ def cancel(bot, update):
 
     return ConversationHandler.END
     
-def put_order(args):
-    log.msg("Function : put_order")
-    api = bitso.Api(bitso_key,bitso_secret)
-    book, op, price, mxn = args
-    op = op.lower()
-    major = "{0:.7}".format(1*float(mxn)/float(price))
-    log.msg("Book {0}, op {1}, price {2}, major {3}, mxn {4}".format(book,op,price,major,mxn))
-    try:
-        order = api.place_order(book=book, side=op, order_type='limit', major=major, price=price)
-    except ApiError as e:
-        log.msg("ERROR setting the order {0}".format(e))
-        order =  {'oid' : 'ERROR setting order'}
-    
-    return order
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
@@ -270,7 +189,7 @@ def confirm_cancel_order(bot, update):
     log.msg("Function : confirm_cancel_order")
     reply_keyboard = [['Yes','No']]
     log.msg("Cancel ask order function")
-    api = bitso.Api(bitso_key,bitso_secret)
+    api = create_api(bitso_key,bitso_secret)
     orderid = update.message.text
     try:
         order = api.lookup_order(orderid)
@@ -291,7 +210,7 @@ def confirm_cancel_order(bot, update):
 
 def remove_order(bot, update):
     log.msg("Function : remove_order")
-    api = bitso.Api(bitso_key,bitso_secret)
+    api = create_api(bitso_key,bitso_secret)
     global oid
     log.msg('Will cancel orderid: {0}'.format(oid))
     try:
