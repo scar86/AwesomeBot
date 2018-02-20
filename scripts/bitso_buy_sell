@@ -11,7 +11,7 @@ import argparse
 
 bitso_file = os.environ['HOME']+"/.order.yaml"
 verbose=False
-mxn_amount=220.0
+mxn_amount=200.0
 mxn_diff=100.0
 
 def get_my_args():
@@ -86,6 +86,7 @@ def main():
     o_amount = order.original_amount
     o_mxn = order.original_value
     o_book = order.book
+    o_price = order.price
     
     logMsg("Book {0}".format(o_book))
     #logMsg("o_id {0}".format(o_id))
@@ -103,14 +104,14 @@ def main():
         log("Creating a new order")
         my_bot.msg("Order {0} was completed or cancelled, creating a new one".format(o_id))
         if o_side == 'buy':
-            new_order = create_order(o_book,'sell',o_mxn)
+            new_order = create_order(o_book,'sell',o_price)
         else:
-            new_order = create_order(o_book,'buy',o_mxn)
+            new_order = create_order(o_book,'buy',o_price)
     elif o_status == 'cancelled' :
         logMsg("Order {0} was cancelled".format(o_id))
         log("Creating a new order")
         my_bot.msg("Order {0} was cancelled, creating a new one".format(o_id))
-        new_order = create_order(o_book,o_side,o_mxn,True)
+        new_order = create_order(o_book,o_side,o_price)
         
         
     if new_order['oid'] == "ERROR":
