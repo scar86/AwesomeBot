@@ -60,7 +60,7 @@ def create_order(book=None,side=None,last=None,recreate=False,force=False):
             price = ticker.low + step
             log("Will buy MXN {0}  at {1} price {2}".format(mxn_amount,book,price))
     elif side == 'sell':
-        price = ticker.low + step # 1600
+        price = ticker.high - step # 1600
         #last buy : 1800
         #if force:
             #log("Not checking prices as last operation was cancelled, this will created on the same side")
@@ -71,7 +71,7 @@ def create_order(book=None,side=None,last=None,recreate=False,force=False):
             logStop(1)
             sys.exit(1)
     elif side == 'buy': 
-        price = ticker.high - step #1700
+        price = ticker.low + step #1700
         # last sell : 1600
         #if force:
             #log("Not checking prices as last operation was cancelled, this will created on the same side")
