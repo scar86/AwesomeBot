@@ -24,7 +24,7 @@ def get_my_args():
     
     return args
 
-def create_order(book=None,side=None,last=None):
+def create_order(book=None,side=None,last=None,force=False):
     try :
         ticker = get_ticker(book)
         log(ticker)
@@ -45,29 +45,38 @@ def create_order(book=None,side=None,last=None):
     
     if side == 'sell':
         price = ticker.low + step # 1600
-        #last buy 1800
-        if price < last:
-            log("ERROR last buy operation was at {0}, this sell operation would be at {1}".format(last,price))
-            my_bot.msg("ERROR last buy operation was at {0}, this sell operation would be at {1} \nPut an order manually".format(last,price))
-            logStop(1)
-            sys.exit(1)
+        #last buy : 1800
+        if force:
+            log("Not checking prices as last operation was cancelled, this will created on the same side")
+        else:
+            if price < last:
+                log("ERROR last buy operation was at {0}, this sell operation would be at {1}".format(last,price))
+                my_bot.msg("ERROR last buy operation was at {0}, this sell operation would be at {1} \nPut an order manually".format(last,price))
+                logStop(1)
+                sys.exit(1)
     elif side == 'buy': 
         price = ticker.high - step #1700
         # last sell : 1600
-        if price > last: 
-            log("ERROR last sell operation was at {0}, this buy operation would be at {1}".format(last,price))
-            my_bot.msg("ERROR last sell operation was at {0}, this buy operation would be at {1} \nPut an order manually".format(last,price))
-            logStop(1)
-            sys.exit(1) 
+        if force:
+            log("Not checking prices as last operation was cancelled, this will created on the same side")
+        else:
+            if price > last: 
+                log("ERROR last sell operation was at {0}, this buy operation would be at {1}".format(last,price))
+                my_bot.msg("ERROR last sell operation was at {0}, this buy operation would be at {1} \nPut an order manually".format(last,price))
+                logStop(1)
+                sys.exit(1) 
     
-    cmd=[book, side, price, mxn_amount]
+    cmd=[book, side, float("{0:.2f}".format(price)), float(mxn_amount)]
+    log(cmd)
     
     try:
         new_order =  put_order(cmd)
+        return new_order
     except:
         log("ERROR putting new order {0}".format(cmd))
-        my_bot.msg("ERROR putting new order {0}".format(cmd))
-        
+        my_bot.msg("ERROR putting new order {0} \ Put order manually".format(cmd))
+        logStop(1)
+        sys.exit(1)
         
 def main():
     INFO = get_info(args.variables)
@@ -89,17 +98,31 @@ def main():
         logMsg("order {0} is still open".format(o_id))
         logStop()
         sys.exit(0)
-    elif o_status == 'cancelled' or o_status == 'completed':
-        logMsg("Order {0} was cancelled".format(o_id))
+    elif o_status == 'completed':
+        logMsg("Order {0} was completed".format(o_id))
         log("Creating a new order")
         my_bot.msg("Order {0} was completed or cancelled, creating a new one".format(o_id))
         if o_side == 'buy':
-            create_order(o_book,'sell',o_mxn)
+            new_order = create_order(o_book,'sell',o_mxn)
         else:
-            create_order(o_book,'buy',o_mxn)
+            new_order = create_order(o_book,'buy',o_mxn)
+    elif o_status == 'cancelled' :
+        logMsg("Order {0} was cancelled".format(o_id))
+        log("Creating a new order")
+        my_bot.msg("Order {0} was cancelled, creating a new one".format(o_id))
+        new_order = create_order(o_book,o_side,o_mxn,True)
         
+        
+    if new_order['oid'] == "ERROR":
+        log("There was an eror putting the new order")
+        my_bot.msg("There was an eror putting the new order")
+        logStop(1)
+        sys.exit(1)
+    
+    log("New order id : {0}".format(new_order['oid']))
+    my_bot.msg("New order id : {0}".format(new_order['oid']))
     #update the dict
-    ORDER['order']['side'] = side
+    ORDER['order']['side'] = o_side
     ORDER['order']['id'] = new_order['oid']
     save_info(bitso_file,ORDER)
     logStop(0)

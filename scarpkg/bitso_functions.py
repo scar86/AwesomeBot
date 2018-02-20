@@ -90,9 +90,9 @@ def put_order(args):
     logMsg("Book {0}, op {1}, price {2}, major {3}, mxn {4}".format(book,op,price,major,mxn))
     try:
         order = api.place_order(book=book, side=op, order_type='limit', major=major, price=price)
-    except ApiError as e:
+    except bitso.errors.ApiError as e:
         logMsg("ERROR setting the order {0}".format(e))
-        order =  {'oid' : 'ERROR setting order'}
+        order =  {'oid' : 'ERROR'}
     
     return order
 
