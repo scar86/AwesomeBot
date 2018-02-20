@@ -115,6 +115,10 @@ def main():
         logMsg("order {0} is still open".format(o_id))
         logStop()
         sys.exit(0)
+    elif o_status == 'partially filled':
+        logMsg("order {0} is still in progress".format(o_id))
+        logStop()
+        sys.exit(0)
     elif o_status == 'completed':
         logMsg("Order {0} was completed".format(o_id))
         log("Creating a new order")
