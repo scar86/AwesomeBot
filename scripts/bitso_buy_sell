@@ -24,7 +24,7 @@ def get_my_args():
     
     return args
 
-def create_order(book=None,side=None,last=None,force=False):
+def create_order(book=None,side=None,last=None,recreate=False,force=False):
     try :
         ticker = get_ticker(book)
         log(ticker)
@@ -43,28 +43,44 @@ def create_order(book=None,side=None,last=None,force=False):
     log("The difference between high and low is {0}".format(diff))
     log("The steps will be of {0}".format(step))
     
-    if side == 'sell':
+    log(book)
+    log(side)
+    log(last)
+    log(force)
+    log(recreate)
+    
+    if recreate:
+        log("Recreate the last operation with new values")
+        if side == 'sell':
+            log("Sell recreate")
+            price = ticker.low - step
+            log("Will sell MXN {0}  at {1} price {2}".format(mxn_amount,book,price))
+        elif side == 'buy':
+            log("Buy recreate")
+            price = ticker.low + step
+            log("Will buy MXN {0}  at {1} price {2}".format(mxn_amount,book,price))
+    elif side == 'sell':
         price = ticker.low + step # 1600
         #last buy : 1800
-        if force:
-            log("Not checking prices as last operation was cancelled, this will created on the same side")
-        else:
-            if price < last:
-                log("ERROR last buy operation was at {0}, this sell operation would be at {1}".format(last,price))
-                my_bot.msg("ERROR last buy operation was at {0}, this sell operation would be at {1} \nPut an order manually".format(last,price))
-                logStop(1)
-                sys.exit(1)
+        #if force:
+            #log("Not checking prices as last operation was cancelled, this will created on the same side")
+        #else:
+        if price < last:
+            log("ERROR last buy operation was at {0}, this sell operation would be at {1}".format(last,price))
+            my_bot.msg("ERROR last buy operation was at {0}, this sell operation would be at {1} \nPut an order manually".format(last,price))
+            logStop(1)
+            sys.exit(1)
     elif side == 'buy': 
         price = ticker.high - step #1700
         # last sell : 1600
-        if force:
-            log("Not checking prices as last operation was cancelled, this will created on the same side")
-        else:
-            if price > last: 
-                log("ERROR last sell operation was at {0}, this buy operation would be at {1}".format(last,price))
-                my_bot.msg("ERROR last sell operation was at {0}, this buy operation would be at {1} \nPut an order manually".format(last,price))
-                logStop(1)
-                sys.exit(1) 
+        #if force:
+            #log("Not checking prices as last operation was cancelled, this will created on the same side")
+        #else:
+        if price > last: 
+            log("ERROR last sell operation was at {0}, this buy operation would be at {1}".format(last,price))
+            my_bot.msg("ERROR last sell operation was at {0}, this buy operation would be at {1} \nPut an order manually".format(last,price))
+            logStop(1)
+            sys.exit(1) 
     
     cmd=[book, side, float("{0:.2f}".format(price)), float(mxn_amount)]
     log(cmd)
@@ -109,9 +125,9 @@ def main():
             new_order = create_order(o_book,'buy',o_price)
     elif o_status == 'cancelled' :
         logMsg("Order {0} was cancelled".format(o_id))
-        log("Creating a new order")
+        log("Creating a new order side {0}".format(o_side))
         my_bot.msg("Order {0} was cancelled, creating a new one".format(o_id))
-        new_order = create_order(o_book,o_side,o_price)
+        new_order = create_order(o_book,o_side,o_price,recreate=True)
         
         
     if new_order['oid'] == "ERROR":
