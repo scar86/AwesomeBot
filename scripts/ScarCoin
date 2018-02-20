@@ -130,9 +130,20 @@ def unknown(bot, update):
     
 def price(bot, update):
     log.msg("Function : price")
-    bot.send_message(chat_id=update.message.chat_id, text="To be implemented")
     log.msg("Got a message from {0}, chat id {1}, username {2}".format(update.message.from_user.first_name,
                                                                         update.message.chat_id, update.message.from_user.username))
+    books=['eth_mxn','btc_mxn','xrp_mxn']
+    api = bitso.Api(bitso_key,bitso_secret)
+    
+    for book in books:
+        tick = api.ticker(book)
+        spread=(tick.high-tick.low)/tick.high
+        #print "".format(spread)
+        msg="Book {0}\nHigh {1}\nLow {2}\nLast {3}\nBid {4}\nAsk {5}\nSpread {6:.3f} ".format(
+                tick.book,tick.high,tick.low,tick.last,tick.bid,tick.ask,spread)
+        
+        bot.send_message(chat_id=update.message.chat_id, text=msg)
+    
                                                                         
 def orders(bot, update):
     log.msg("Function : orders")
