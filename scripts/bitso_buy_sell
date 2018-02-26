@@ -85,7 +85,6 @@ def create_order(book=None,side=None,last=None,recreate=False,force=False):
     cmd=[book, side, float("{0:.2f}".format(price)), float(mxn_amount)]
     log(cmd)
     
-    sys.exit(0)
     try:
         new_order =  put_order(cmd)
         return new_order
