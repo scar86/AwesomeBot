@@ -53,7 +53,7 @@ def create_order(book=None,side=None,last=None,recreate=False,force=False):
         log("Recreate the last operation with new values")
         if side == 'sell':
             log("Sell recreate")
-            price = ticker.low - step
+            price = ticker.high - step
             log("Will sell MXN {0}  at {1} price {2}".format(mxn_amount,book,price))
         elif side == 'buy':
             log("Buy recreate")
