@@ -6,13 +6,14 @@ from  scarpkg import logStart, logStop, logMsg, Log, get_info, Bot, save_info
 import getopt
 import __main__
 import os
-from scarpkg.bitso_functions import create_api, get_bitso_balance, get_orders, put_order, get_ticker
+from scarpkg.bitso_functions import create_api, get_bitso_balance, get_orders, put_order, get_ticker, put_order_by_major
 import argparse
 
 bitso_file = os.environ['HOME']+"/.order.yaml"
 verbose=False
 mxn_amount=220.0
-mxn_diff=100.0
+mxn_diff=350.0 #Difference should be at least 5
+eth_amount=0.033
 
 def get_my_args():
     
@@ -82,12 +83,13 @@ def create_order(book=None,side=None,last=None,recreate=False,force=False):
             logStop(1)
             sys.exit(1) 
     
-    cmd=[book, side, float("{0:.2f}".format(price)), float(mxn_amount)]
+    #cmd=[book, side, float("{0:.2f}".format(price)), float(mxn_amount)]
+    cmd=[book, side, float("{0:.2f}".format(price)), eth_amount] # will sell by major amount
     log(cmd)
     
     sys.exit(0)
     try:
-        new_order =  put_order(cmd)
+        new_order =  put_order_by_major(cmd)
         return new_order
     except:
         log("ERROR putting new order {0}".format(cmd))
