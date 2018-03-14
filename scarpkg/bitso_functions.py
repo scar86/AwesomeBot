@@ -96,6 +96,20 @@ def put_order(args):
     
     return order
 
+def put_order_by_major(args):
+    logMsg("Function : put_order_by_mayor")
+    api = create_api()
+    book, op, price, major = args
+    op = op.lower()
+    logMsg("Book {0}, op {1}, price {2}, major {3}, mxn {4}".format(book,op,price,major,int(price)*float(major)))
+    try:
+        order = api.place_order(book=book, side=op, order_type='limit', major=major, price=price)
+    except bitso.errors.ApiError as e:
+        logMsg("ERROR setting the order {0}".format(e))
+        order =  {'oid' : 'ERROR'}
+    
+    return order
+
 def get_ticker(book='eth_mxn'):
     logMsg("Function : put_order")
     api = create_api()
