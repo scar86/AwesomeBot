@@ -46,26 +46,26 @@ def status(bot, update):
         
         bot.send_message(chat_id=update.message.chat_id, text=msg)
         try :
-                img = images.grab("172.31.10.61",8081)
-                tmp_img = tempfile.TemporaryFile()
-                tmp_img.write(img)
-                tmp_img.seek(0)
-                bot.send_photo(chat_id, photo=tmp_img)
-                tmp_img.close()
-                del(tmp_img)
-            except:
-                bot.sendMessage(chat_id, 'Error capturando camara 1' )
-                
-            try :
-                img = images.grab2("172.31.10.136",8081)
-                tmp_img = tempfile.TemporaryFile()
-                tmp_img.write(img)
-                tmp_img.seek(0)
-                bot.send_photo(chat_id, photo=tmp_img)
-                tmp_img.close()
-                del(tmp_img)
-            except:
-                bot.sendMessage(chat_id, 'Error capturando camara 2' )
+            img = images.grab("172.31.10.61",8081)
+            tmp_img = tempfile.TemporaryFile()
+            tmp_img.write(img)
+            tmp_img.seek(0)
+            bot.send_photo(chat_id, photo=tmp_img)
+            tmp_img.close()
+            del(tmp_img)
+        except:
+            bot.sendMessage(chat_id, 'Error capturando camara 1' )
+            
+        try :
+            img = images.grab2("172.31.10.136",8081)
+            tmp_img = tempfile.TemporaryFile()
+            tmp_img.write(img)
+            tmp_img.seek(0)
+            bot.send_photo(chat_id, photo=tmp_img)
+            tmp_img.close()
+            del(tmp_img)
+        except:
+            bot.sendMessage(chat_id, 'Error capturando camara 2' )
         
         
         #bot.send_photo(chat_id=update.message.chat_id, photo=open("/Users/scar/Pictures/20160619_213121724_iOS.jpg",'rb'))
