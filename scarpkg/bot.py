@@ -1,6 +1,9 @@
 import os
 import time
-import telepot
+try:
+	import telepot
+except:
+	import telegram as telepot
 import tempfile
 from datetime import datetime
 import yaml
