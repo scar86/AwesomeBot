@@ -11,9 +11,9 @@ import argparse
 
 bitso_file = os.environ['HOME']+"/.order.yaml"
 verbose=False
-mxn_amount=220.0
-mxn_diff=350.0 #Difference should be at least 5
-eth_amount=0.033
+mxn_amount=50.0
+mxn_diff=100.0 #Difference should be at least 5
+eth_amount=0.008
 
 def get_my_args():
     
