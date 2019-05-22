@@ -1,6 +1,6 @@
 import yaml
 import os
-from log import logMsg
+from .log import logMsg
 
 def get_info(var_file=None):
     if not var_file:
@@ -17,6 +17,6 @@ def save_info(filePath,order):
     if os.path.isfile(filePath):
         os.remove(filePath)
         
-    stream = file(filePath, "w")
+    stream = open(filePath, "w")
     yaml.dump(order,stream)
     stream.close()

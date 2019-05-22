@@ -1,6 +1,6 @@
 import bitso
-from get_variables import get_info
-from log import logMsg
+from scarpkg.get_variables import get_info
+from scarpkg.log import logMsg
 
 def create_api(key=None,secret=None,get='bitso'):
     INFO = get_info()
