@@ -49,7 +49,7 @@ class Bot(object):
         if type(audio) is str:
             
             self.bot.sendAudio(self.usr_id, audio=open(audio, 'rb') )
-        elif type(photo) is file:
+        elif type(audio) is file:
             t = datetime.now() #get the time
             time_format = "{0}{1}{2}_{3}{4}{5}".format(t.year,t.month,t.day,t.hour,t.minute,t.second)
             
