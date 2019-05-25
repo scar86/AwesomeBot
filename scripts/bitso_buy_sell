@@ -92,7 +92,7 @@ def create_order(book=None,side=None,last=None,recreate=False,force=False):
         return new_order
     except:
         log("ERROR putting new order {0}".format(cmd))
-        my_bot.msg("ERROR putting new order {0} \ Put order manually".format(cmd))
+        my_bot.msg("ERROR putting new order {0} \n Put order manually".format(cmd))
         logStop(1)
         sys.exit(1)
         
