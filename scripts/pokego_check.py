@@ -47,14 +47,14 @@ def get_poke_info(poke_url):
             poke_info = poke_info.replace("[Change Log]","")
             poke_info = poke_info.replace("Tutorials & Tips","")    
     
-    dummy, poke_version, poke_sub_version, dummy2, month, day, year = poke_info.split()
+    dummy, poke_version, poke_sub_version, dummy2, month, day, year, _  = poke_info.split()
     poke_sub_version = poke_sub_version.replace("(","")
-    poke_sub_version = poke_sub_version.replace(")","")
+    poke_sub_version = poke_sub_version.replace(")Use","")
     poke_sub_version = str(poke_sub_version)
     poke_version = str(poke_version)
     log("Poke Version from page : {0}".format(poke_version))
     log("Poke Subversion from page : {0}".format(poke_sub_version))
-    log("Date from page {0}/{1}/{2}".format(day.replace(",",""),month,year))
+   # log("Date from page {0}/{1}/{2}".format(day.replace(",",""),month,year))
     return poke_version, poke_sub_version
         
 def poke_check(POKE_INFO):
